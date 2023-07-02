@@ -13,18 +13,6 @@ cleanup() {
   rm -f /tmp/workspace.tar.bz2
 }
 
-create_env() {
-  touch ./.env.production
-  echo DATABASE_URL="$DATABASE_URL" >> .env.production
-  echo ACCESS_TOKEN_SECRET="$ACCESS_TOKEN_SECRET" >> .env.production
-  echo REFRESH_TOKEN_SECRET="$REFRESH_TOKEN_SECRET" >> .env.production
-  echo HOST="$HOST" >> .env.production
-  echo PORT="$PORT" >> .env.production
-  echo PGUSER="$PGUSER" >> .env.production
-  echo POSTGRES_USER="$POSTGRES_USER" >> .env.production
-  echo POSTGRES_PASSWORD="$POSTGRES_PASSWORD" >> .env.production
-  echo POSTGRES_DB="$POSTGRES_DB" >> .env.production
-}
 
 trap cleanup EXIT
 
@@ -34,7 +22,7 @@ tar cjvf /tmp/workspace.tar.bz2 --exclude .git .
 log "Launching ssh agent."
 eval `ssh-agent -s`
 
-remote_command="set -e ; log() { echo '>> [remote]' \$@ ; } ; cleanup() { log 'Removing workspace...'; rm -rf \"\$HOME/workspace\" ; } ; . ~/.bash_profile ; log 'Creating workspace directory...' ; mkdir -p \"\$HOME/workspace\" ; trap cleanup EXIT ; log 'Unpacking workspace...' ; tar -C \"\$HOME/workspace\" -xjv ;log 'Logging in the container registry $CONTAINER_REGISTRY'; log 'Launching docker compose...' ; cd \"\$HOME/workspace\"; create_env; docker compose -f \"$DOCKER_COMPOSE_FILENAME\" -p \"$DOCKER_COMPOSE_PREFIX\" up -d --build"
+remote_command="set -e ; log() { echo '>> [remote]' \$@ ; } ; cleanup() { log 'Removing workspace...'; rm -rf \"\$HOME/workspace\" ; } ; . ~/.bash_profile ; log 'Creating workspace directory...' ; mkdir -p \"\$HOME/workspace\" ; trap cleanup EXIT ; log 'Unpacking workspace...' ; tar -C \"\$HOME/workspace\" -xjv ;log 'Logging in the container registry $CONTAINER_REGISTRY'; log 'Launching docker compose...' ; cd \"\$HOME/workspace\" ; docker compose -f \"$DOCKER_COMPOSE_FILENAME\" -p \"$DOCKER_COMPOSE_PREFIX\" up -d --build"
 if $USE_DOCKER_STACK ; then
   remote_command="set -e ; log() { echo '>> [remote]' \$@ ; } ; cleanup() { log 'Removing workspace...'; rm -rf \"\$HOME/workspace\" ; } ; log 'Creating workspace directory...' ; mkdir -p \"\$HOME/workspace/$DOCKER_COMPOSE_PREFIX\" ; trap cleanup EXIT ; log 'Unpacking workspace...' ; tar -C \"\$HOME/workspace/$DOCKER_COMPOSE_PREFIX\" -xjv ; log 'Launching docker stack deploy...' ; cd \"\$HOME/workspace/$DOCKER_COMPOSE_PREFIX\" ; docker stack deploy -c \"$DOCKER_COMPOSE_FILENAME\" --prune \"$DOCKER_COMPOSE_PREFIX\""
 fi
